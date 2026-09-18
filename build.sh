@@ -4,12 +4,11 @@
 #   ./build.sh install    build, copy to /Applications and launch
 # Sign with your own certificate (then the Keychain won't ask again after every rebuild):
 #   SIGN_ID="Apple Development: …" ./build.sh
+# Version, bundle ID etc. live in Resources/Info.plist.
 set -euo pipefail
 cd "${0:A:h}"
 
 APP=simpleBackup
-VERSION=1.0.0
-BUNDLE_ID=local.simplebackup
 SIGN_ID=${SIGN_ID:--}
 
 # only generate the icon if there isn't one yet
@@ -33,29 +32,9 @@ swiftc -O -swift-version 6 -parse-as-library -target "$(uname -m)-apple-macos14.
   -o $CONTENTS/MacOS/$APP Sources/*.swift
 
 echo "▸ Resources"
-plutil -lint -s Resources/*.lproj/*.strings # a typo in a .strings file silently breaks all translations
+plutil -lint -s Resources/Info.plist Resources/*.lproj/*.strings # a typo in a .strings file silently breaks all translations
+cp Resources/Info.plist $CONTENTS/
 cp -R Resources/AppIcon.icns Resources/*.lproj $CONTENTS/Resources/
-
-cat > $CONTENTS/Info.plist <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>CFBundleName</key><string>$APP</string>
-  <key>CFBundleExecutable</key><string>$APP</string>
-  <key>CFBundleIdentifier</key><string>$BUNDLE_ID</string>
-  <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>$VERSION</string>
-  <key>CFBundleVersion</key><string>$VERSION</string>
-  <key>CFBundleIconFile</key><string>AppIcon</string>
-  <key>CFBundleDevelopmentRegion</key><string>en</string>
-  <key>CFBundleLocalizations</key><array><string>en</string><string>de</string></array>
-  <key>LSMinimumSystemVersion</key><string>14.0</string>
-  <key>LSUIElement</key><true/>
-  <key>NSHumanReadableCopyright</key><string>© $(date +%Y)</string>
-</dict>
-</plist>
-EOF
 
 echo "▸ Signing ($SIGN_ID)"
 codesign --force --sign "$SIGN_ID" build/$APP.app
