@@ -52,6 +52,7 @@
 "Add folder" = "Add folder";
 "Remove entry" = "Remove entry";
 "Add a folder with +." = "Add a folder with +.";
+"Launch at login" = "Launch at login";
 "Path to 7zz" = "Path to 7zz";
 "7zz found" = "7zz found";
 "7zz not found – brew install sevenzip" = "7zz not found – brew install sevenzip";

@@ -52,6 +52,7 @@
 "Add folder" = "Ordner hinzufügen";
 "Remove entry" = "Eintrag entfernen";
 "Add a folder with +." = "Mit + einen Ordner hinzufügen.";
+"Launch at login" = "Bei der Anmeldung starten";
 "Path to 7zz" = "Pfad zu 7zz";
 "7zz found" = "7zz gefunden";
 "7zz not found – brew install sevenzip" = "7zz nicht gefunden – brew install sevenzip";

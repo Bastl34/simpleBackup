@@ -1,3 +1,4 @@
+import ServiceManagement
 import SwiftUI
 
 /// `@State` is a macro in the current SDK, and its plugin only ships with Xcode. The alias uses the plain
@@ -7,6 +8,7 @@ typealias Local = SwiftUI.State
 struct SettingsView: View {
     @ObservedObject var settings: Settings
     @Local private var selection: UUID?
+    @Local private var launchAtLogin = SMAppService.mainApp.status == .enabled
 
     var body: some View {
         VStack(spacing: 0) {
@@ -46,6 +48,8 @@ struct SettingsView: View {
             Divider()
 
             HStack {
+                Toggle("Launch at login", isOn: Binding(get: { launchAtLogin }, set: setLaunchAtLogin))
+                Spacer(minLength: 24)
                 Text(verbatim: "7zz:")
                 TextField("Path to 7zz", text: $settings.sevenZip)
                 let found = FileManager.default.isExecutableFile(atPath: settings.sevenZip)
@@ -56,7 +60,20 @@ struct SettingsView: View {
             .padding(12)
         }
         .frame(minWidth: 720, minHeight: 590)
-        .onAppear { selection = selection ?? settings.entries.first?.id }
+        .onAppear {
+            selection = selection ?? settings.entries.first?.id
+            launchAtLogin = SMAppService.mainApp.status == .enabled // may have been changed in System Settings
+        }
+    }
+
+    private func setLaunchAtLogin(_ on: Bool) {
+        do {
+            if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+        } catch {
+            NSAlert(error: error).runModal()
+        }
+        launchAtLogin = SMAppService.mainApp.status == .enabled
+        if SMAppService.mainApp.status == .requiresApproval { SMAppService.openSystemSettingsLoginItems() }
     }
 
     private func binding(for id: UUID) -> Binding<BackupEntry> {
