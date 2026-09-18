@@ -1,0 +1,71 @@
+/* simpleBackup – English (base language; keys are the English source strings) */
+
+/* Menu */
+"Start Backup" = "Start Backup";
+"Settings…" = "Settings…";
+"About simpleBackup" = "About simpleBackup";
+"Quit" = "Quit";
+"No folders set up" = "No folders set up";
+"Stop %@ – %@" = "Stop %1$@ – %2$@";
+"You can quit once no backup is running." = "You can quit once no backup is running.";
+"Encrypted 7-Zip backups from the menu bar." = "Encrypted 7-Zip backups from the menu bar.";
+
+/* Quit while running */
+"A backup is still running" = "A backup is still running";
+"Quitting will cancel all running backups." = "Quitting will cancel all running backups.";
+"Keep Running" = "Keep Running";
+"Cancel Backups and Quit" = "Cancel Backups and Quit";
+
+/* Starting a backup */
+"7zz not found" = "7zz not found";
+"There is no 7zz at “%@”. Install it with “brew install sevenzip” or change the path in Settings." = "There is no 7zz at “%@”. Install it with “brew install sevenzip” or change the path in Settings.";
+"Folder not found" = "Folder not found";
+"“%@” does not exist (anymore)." = "“%@” does not exist (anymore).";
+"Backup destination not found" = "Backup destination not found";
+"“%@” is not reachable. Is the drive connected?" = "“%@” is not reachable. Is the drive connected?";
+"The backup could not be started" = "The backup could not be started";
+
+/* File already exists */
+"“%@” already exists" = "“%@” already exists";
+"Do you want to overwrite the existing backup or create a new file?" = "Do you want to overwrite the existing backup or create a new file?";
+"New File “%@”" = "New File “%@”";
+"Overwrite" = "Overwrite";
+"Cancel" = "Cancel";
+
+/* Password prompt */
+"Password for “%@”" = "Password for “%@”";
+"The backup is encrypted with it, including file names." = "The backup is encrypted with it, including file names.";
+"Password" = "Password";
+"Repeat" = "Repeat";
+"Save in Keychain" = "Save in Keychain";
+"The passwords don't match." = "The passwords don't match.";
+
+/* Result */
+"Backup finished" = "Backup finished";
+"Backup “%@” finished with warnings" = "Backup “%@” finished with warnings";
+"Backup “%@” failed" = "Backup “%@” failed";
+"7zz exited with code %lld." = "7zz exited with code %lld.";
+"The archive is at %@ but could not be renamed:\n%@" = "The archive is at %1$@ but could not be renamed:\n%2$@";
+
+/* Settings window */
+"simpleBackup Settings" = "simpleBackup Settings";
+"Add folder" = "Add folder";
+"Remove entry" = "Remove entry";
+"Add a folder with +." = "Add a folder with +.";
+"Path to 7zz" = "Path to 7zz";
+"7zz found" = "7zz found";
+"7zz not found – brew install sevenzip" = "7zz not found – brew install sevenzip";
+"Name" = "Name";
+"Folder" = "Folder";
+"Back up to" = "Back up to";
+"File name" = "File name";
+"Not selected" = "Not selected";
+"Choose…" = "Choose…";
+"Which folder should be backed up?" = "Which folder should be backed up?";
+"Where should the backups go?" = "Where should the backups go?";
+"Save password in Keychain" = "Save password in Keychain";
+"Saved" = "Saved";
+"Save" = "Save";
+"Replace" = "Replace";
+"Without a saved password, you'll be asked when the backup starts." = "Without a saved password, you'll be asked when the backup starts.";
+"You'll be asked for the password on every backup." = "You'll be asked for the password on every backup.";

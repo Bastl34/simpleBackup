@@ -1,0 +1,12 @@
+# build output
+build/
+
+# macOS
+.DS_Store
+
+# editors
+.vscode/
+.idea/
+*.swp
+.swiftpm/
+xcuserdata/
