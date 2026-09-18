@@ -11,7 +11,7 @@ cd "${0:A:h}"
 APP=simpleBackup
 SIGN_ID=${SIGN_ID:--}
 
-# only generate the icon if there isn't one yet
+# only generate the icon if there isn't one yet (delete Resources/AppIcon.icns to redraw it)
 if [[ ! -f Resources/AppIcon.icns ]]; then
   echo "▸ Icon"
   ICONSET=build/AppIcon.iconset
@@ -22,6 +22,7 @@ if [[ ! -f Resources/AppIcon.icns ]]; then
     sips -z $((s * 2)) $((s * 2)) build/icon.png --out $ICONSET/icon_${s}x${s}@2x.png >/dev/null
   done
   iconutil -c icns $ICONSET -o Resources/AppIcon.icns
+  sips -z 512 512 build/icon.png --out Icon/AppIcon.png >/dev/null # for the README
 fi
 
 echo "▸ Compiling"

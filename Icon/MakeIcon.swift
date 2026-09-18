@@ -13,7 +13,10 @@ func withShadow(blur: CGFloat, y: CGFloat, alpha: CGFloat, _ draw: () -> Void) {
     shadow.shadowBlurRadius = blur
     shadow.shadowOffset = NSSize(width: 0, height: y)
     shadow.set()
+    // one shadow for the whole group, so overlapping shapes don't shade each other
+    NSGraphicsContext.current!.cgContext.beginTransparencyLayer(auxiliaryInfo: nil)
     draw()
+    NSGraphicsContext.current!.cgContext.endTransparencyLayer()
     NSGraphicsContext.restoreGraphicsState()
 }
 
@@ -51,21 +54,27 @@ withShadow(blur: 18, y: -8, alpha: 0.3) {
     NSColor.white.setStroke()
     arc.stroke()
 
-    // lock
-    let shackle = NSBezierPath()
-    shackle.move(to: NSPoint(x: 512 - 66, y: 500))
-    shackle.appendArc(withCenter: NSPoint(x: 512, y: 548), radius: 66, startAngle: 180, endAngle: 0, clockwise: true)
-    shackle.line(to: NSPoint(x: 512 + 66, y: 500))
-    shackle.lineWidth = 38
-    shackle.stroke()
+    // drive: slanted top + front, like the SF Symbol "externaldrive"
     NSColor.white.setFill()
-    NSBezierPath(roundedRect: NSRect(x: 512 - 112, y: 372, width: 224, height: 168), xRadius: 36, yRadius: 36).fill()
+    let top = NSBezierPath()
+    top.move(to: NSPoint(x: 374, y: 500))
+    top.line(to: NSPoint(x: 420, y: 600))
+    top.line(to: NSPoint(x: 604, y: 600))
+    top.line(to: NSPoint(x: 650, y: 500))
+    top.close()
+    top.lineWidth = 24
+    top.lineJoinStyle = .round // rounds the corners
+    top.fill()
+    top.stroke()
+    NSBezierPath(roundedRect: NSRect(x: 362, y: 400, width: 300, height: 132), xRadius: 34, yRadius: 34).fill()
 }
 
-// keyhole
+// seam between top and front, slot and status light
 color(0x3A4BEF).setFill()
-NSBezierPath(ovalIn: NSRect(x: 512 - 22, y: 448, width: 44, height: 44)).fill()
-NSBezierPath(roundedRect: NSRect(x: 512 - 10, y: 408, width: 20, height: 56), xRadius: 10, yRadius: 10).fill()
+NSBezierPath(roundedRect: NSRect(x: 390, y: 522, width: 244, height: 12), xRadius: 6, yRadius: 6).fill()
+NSBezierPath(roundedRect: NSRect(x: 398, y: 450, width: 150, height: 20), xRadius: 10, yRadius: 10).fill()
+color(0x2EE6D6).setFill()
+NSBezierPath(ovalIn: NSRect(x: 586, y: 442, width: 36, height: 36)).fill()
 
 NSGraphicsContext.current = nil
 try! bitmap.representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: CommandLine.arguments[1]))

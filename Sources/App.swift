@@ -94,7 +94,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
                 button.image = ProgressRing.image(values)
                 button.title = " " + (values.reduce(0, +) / Double(values.count)).formatted(.percent.precision(.fractionLength(0)))
             } else {
-                button.image = due.isEmpty ? symbol("lock.rotation", size: 15) : symbol(Self.dueSymbol, size: 15, orange: true)
+                button.image = due.isEmpty ? Self.idleIcon : symbol(Self.dueSymbol, size: 15, orange: true)
                 button.title = ""
             }
             let names = due.map(\.title).formatted(.list(type: .and))
@@ -120,7 +120,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
                 // the archive that would be created (+ when the last one was made), or the one currently being written
                 let ago = entry.lastBackup?.formatted(.relative(presentation: .numeric))
                 let last = ago.map { String(localized: "Last backup: \($0)") } ?? String(localized: "No backup yet")
-                item.subtitle = job?.target.lastPathComponent ?? "\(entry.archiveName()) · \(last)"
+                item.subtitle = job?.target.lastPathComponent ?? "\(entry.archiveName())\n\(last)"
             }
         }
     }
@@ -281,6 +281,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
     }
 
     private static let dueSymbol = "exclamationmark.arrow.circlepath"
+
+    /// The ring of "lock.rotation" (= mirrored "arrow.circlepath") with a drive in the middle instead of the lock.
+    private static let idleIcon: NSImage = {
+        let ring = NSImage(systemSymbolName: "arrow.circlepath", accessibilityDescription: nil)!
+            .withSymbolConfiguration(.init(pointSize: 15, weight: .regular))!
+        let drive = NSImage(systemSymbolName: "externaldrive.fill", accessibilityDescription: nil)!
+            .withSymbolConfiguration(.init(pointSize: 7, weight: .semibold))!
+        let image = NSImage(size: ring.size, flipped: false) { rect in
+            NSGraphicsContext.saveGraphicsState()
+            let mirror = NSAffineTransform()
+            mirror.translateX(by: rect.width, yBy: 0)
+            mirror.scaleX(by: -1, yBy: 1)
+            mirror.concat()
+            ring.draw(in: rect)
+            NSGraphicsContext.restoreGraphicsState()
+            drive.draw(in: NSRect(x: rect.midX - drive.size.width / 2, y: rect.midY - drive.size.height / 2,
+                                  width: drive.size.width, height: drive.size.height))
+            return true
+        }
+        image.isTemplate = true
+        return image
+    }()
 
     /// SF Symbol; orange ones are colored (not template), so they stay orange in the menu bar too.
     private func symbol(_ name: String, size: CGFloat? = nil, orange: Bool = false) -> NSImage? {
