@@ -97,13 +97,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
         for item in backupMenu.items {
             guard let id = item.representedObject as? UUID,
                   let entry = settings.entries.first(where: { $0.id == id }) else { continue }
-            if let job = jobs.first(where: { $0.entry.id == id }) {
+            let job = jobs.first { $0.entry.id == id }
+            if let job {
                 let percent = job.progress.formatted(.percent.precision(.fractionLength(0)))
                 item.title = String(localized: "Stop \(entry.title) – \(percent)")
                 item.image = ProgressRing.image([job.progress], size: 16)
             } else {
                 item.title = entry.title
                 item.image = NSImage(systemSymbolName: "folder", accessibilityDescription: nil)
+            }
+            if #available(macOS 14.4, *) {
+                // the archive that would be created, or the one currently being written
+                item.subtitle = job?.target.lastPathComponent ?? entry.archiveName()
             }
         }
     }
