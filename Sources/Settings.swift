@@ -7,8 +7,18 @@ struct BackupEntry: Codable, Identifiable, Equatable {
     var source: String
     var destination: String
     var savePassword = false
+    var lastBackup: Date?
+    var remindAfterDays: Int? // nil = no reminder (optional, so entries saved by older versions still decode)
 
     var title: String { name.isEmpty ? URL(fileURLWithPath: source).lastPathComponent : name }
+
+    /// A reminder is set and the last backup is at least that many calendar days ago (or there never was one).
+    var isDue: Bool {
+        guard let days = remindAfterDays else { return false }
+        guard let lastBackup else { return true }
+        let calendar = Calendar.current
+        return calendar.date(byAdding: .day, value: days, to: calendar.startOfDay(for: lastBackup))! <= .now
+    }
 
     /// e.g. "Documents_2026-09-18.7z", from n = 2 on "Documents_2026-09-18-2.7z"
     func archiveName(_ n: Int = 1) -> String {
@@ -38,6 +48,10 @@ final class Settings: ObservableObject {
         sevenZip = defaults.string(forKey: "sevenZip")
             ?? ["/opt/homebrew/bin/7zz", "/usr/local/bin/7zz"].first { FileManager.default.isExecutableFile(atPath: $0) }
             ?? "/opt/homebrew/bin/7zz"
+    }
+
+    func update(_ id: UUID, _ change: (inout BackupEntry) -> Void) {
+        if let index = entries.firstIndex(where: { $0.id == id }) { change(&entries[index]) }
     }
 }
 

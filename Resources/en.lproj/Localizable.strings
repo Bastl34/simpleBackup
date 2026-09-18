@@ -69,3 +69,18 @@
 "Replace" = "Replace";
 "Without a saved password, you'll be asked when the backup starts." = "Without a saved password, you'll be asked when the backup starts.";
 "You'll be asked for the password on every backup." = "You'll be asked for the password on every backup.";
+
+/* Reminder */
+"Reminder" = "Reminder";
+"Off" = "Off";
+"After 1 day" = "After 1 day";
+"After 3 days" = "After 3 days";
+"After 1 week" = "After 1 week";
+"After 2 weeks" = "After 2 weeks";
+"After 1 month" = "After 1 month";
+"Last backup" = "Last backup";
+"Never" = "Never";
+"When a backup is due, the menu bar icon turns orange." = "When a backup is due, the menu bar icon turns orange.";
+"Last backup: %@" = "Last backup: %@";
+"No backup yet" = "No backup yet";
+"Backup due: %@" = "Backup due: %@";

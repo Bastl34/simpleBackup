@@ -55,7 +55,7 @@ struct SettingsView: View {
             }
             .padding(12)
         }
-        .frame(minWidth: 720, minHeight: 490)
+        .frame(minWidth: 720, minHeight: 590)
         .onAppear { selection = selection ?? settings.entries.first?.id }
     }
 
@@ -96,6 +96,26 @@ private struct EntryForm: View {
                 FolderRow(title: "Folder", message: String(localized: "Which folder should be backed up?"), path: $entry.source)
                 FolderRow(title: "Back up to", message: String(localized: "Where should the backups go?"), path: $entry.destination)
                 LabeledContent("File name", value: entry.archiveName())
+            }
+            Section {
+                Picker("Reminder", selection: $entry.remindAfterDays) {
+                    Text("Off").tag(Int?.none)
+                    Text("After 1 day").tag(Int?.some(1))
+                    Text("After 3 days").tag(Int?.some(3))
+                    Text("After 1 week").tag(Int?.some(7))
+                    Text("After 2 weeks").tag(Int?.some(14))
+                    Text("After 1 month").tag(Int?.some(30))
+                }
+                LabeledContent("Last backup") {
+                    if let last = entry.lastBackup {
+                        Text(last.formatted(date: .abbreviated, time: .shortened))
+                    } else {
+                        Text("Never")
+                    }
+                }
+            } footer: {
+                Text("When a backup is due, the menu bar icon turns orange.")
+                    .foregroundStyle(.secondary)
             }
             Section {
                 Toggle("Save password in Keychain", isOn: $entry.savePassword)

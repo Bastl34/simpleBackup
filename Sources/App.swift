@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 import UserNotifications
 
@@ -18,10 +19,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let menu = NSMenu()
     private let backupMenu = NSMenu()
+    private lazy var startItem = menuItem(String(localized: "Start Backup"), symbol: "play.circle", action: nil)
     private let quitItem = NSMenuItem(title: String(localized: "Quit"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
     private var jobs: [BackupJob] = []
     private var settingsWindow: NSWindow?
     private var quitting = false
+    private var entriesObserver: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.mainMenu = editMenu()
@@ -29,10 +32,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
 
         statusItem.button?.imagePosition = .imageLeading
         statusItem.button?.font = .monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)
+        statusItem.button?.setAccessibilityLabel("simpleBackup")
 
-        let startItem = menuItem(String(localized: "Start Backup"), symbol: "play.circle", action: nil)
         startItem.submenu = backupMenu
-        quitItem.image = NSImage(systemSymbolName: "power", accessibilityDescription: nil)
+        quitItem.image = symbol("power")
         menu.items = [
             startItem,
             .separator(),
@@ -44,6 +47,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
         menu.autoenablesItems = false
         menu.delegate = self
         statusItem.menu = menu
+
+        // keep the "backup due" state current: on every settings change and every few minutes
+        entriesObserver = settings.$entries.receive(on: DispatchQueue.main).sink { [weak self] _ in self?.refresh() }
+        Timer.scheduledTimer(timeInterval: 300, target: self, selector: #selector(refresh), userInfo: nil, repeats: true)
 
         refresh()
         if settings.entries.isEmpty { openSettings() }
@@ -78,19 +85,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
         refresh()
     }
 
-    /// Updates the menu bar icon and menu items for the running backups (also while the menu is open).
-    private func refresh() {
+    /// Updates the menu bar icon and menu items for running and due backups (also while the menu is open).
+    @objc private func refresh() {
+        let due = settings.entries.filter { entry in entry.isDue && !jobs.contains { $0.entry.id == entry.id } }
         if let button = statusItem.button {
-            if jobs.isEmpty {
-                button.image = NSImage(systemSymbolName: "lock.rotation", accessibilityDescription: "simpleBackup")?
-                    .withSymbolConfiguration(.init(pointSize: 15, weight: .regular))
-                button.title = ""
-            } else {
+            if !jobs.isEmpty {
                 let values = jobs.map(\.progress)
                 button.image = ProgressRing.image(values)
                 button.title = " " + (values.reduce(0, +) / Double(values.count)).formatted(.percent.precision(.fractionLength(0)))
+            } else {
+                button.image = due.isEmpty ? symbol("lock.rotation", size: 15) : symbol(Self.dueSymbol, size: 15, orange: true)
+                button.title = ""
             }
+            let names = due.map(\.title).formatted(.list(type: .and))
+            button.toolTip = due.isEmpty ? nil : String(localized: "Backup due: \(names)")
         }
+        startItem.image = due.isEmpty ? symbol("play.circle") : symbol(Self.dueSymbol, orange: true)
         quitItem.isEnabled = jobs.isEmpty
         quitItem.toolTip = jobs.isEmpty ? nil : String(localized: "You can quit once no backup is running.")
 
@@ -104,11 +114,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
                 item.image = ProgressRing.image([job.progress], size: 16)
             } else {
                 item.title = entry.title
-                item.image = NSImage(systemSymbolName: "folder", accessibilityDescription: nil)
+                item.image = entry.isDue ? symbol(Self.dueSymbol, orange: true) : symbol("folder")
             }
             if #available(macOS 14.4, *) {
-                // the archive that would be created, or the one currently being written
-                item.subtitle = job?.target.lastPathComponent ?? entry.archiveName()
+                // the archive that would be created (+ when the last one was made), or the one currently being written
+                let ago = entry.lastBackup?.formatted(.relative(presentation: .numeric))
+                let last = ago.map { String(localized: "Last backup: \($0)") } ?? String(localized: "No backup yet")
+                item.subtitle = job?.target.lastPathComponent ?? "\(entry.archiveName()) · \(last)"
             }
         }
     }
@@ -174,6 +186,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
 
     private func finished(_ job: BackupJob, _ outcome: BackupJob.Outcome) {
         jobs.removeAll { $0 === job }
+        switch outcome {
+        case .success, .warnings: settings.update(job.entry.id) { $0.lastBackup = .now }
+        case .failed, .stopped: break
+        }
         refresh()
         if quitting {
             if jobs.isEmpty { NSApp.reply(toApplicationShouldTerminate: true) }
@@ -246,9 +262,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
                 alert.informativeText = String(localized: "The passwords don't match.")
                 continue
             }
-            if alert.suppressionButton?.state == .on, Keychain.save(password, for: entry),
-               let index = settings.entries.firstIndex(where: { $0.id == entry.id }) {
-                settings.entries[index].savePassword = true
+            if alert.suppressionButton?.state == .on, Keychain.save(password, for: entry) {
+                settings.update(entry.id) { $0.savePassword = true }
             }
             return password
         }
@@ -258,11 +273,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, UNUser
     // MARK: - Helpers
 
     /// Menu item with an SF Symbol in front, so all items look the same on every macOS version.
-    private func menuItem(_ title: String, symbol: String, action: Selector?, key: String = "") -> NSMenuItem {
+    private func menuItem(_ title: String, symbol name: String, action: Selector?, key: String = "") -> NSMenuItem {
         let item = NSMenuItem(title: title, action: action, keyEquivalent: key)
         item.target = self
-        item.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+        item.image = symbol(name)
         return item
+    }
+
+    private static let dueSymbol = "exclamationmark.arrow.circlepath"
+
+    /// SF Symbol; orange ones are colored (not template), so they stay orange in the menu bar too.
+    private func symbol(_ name: String, size: CGFloat? = nil, orange: Bool = false) -> NSImage? {
+        var config = size.map { NSImage.SymbolConfiguration(pointSize: $0, weight: .regular) } ?? NSImage.SymbolConfiguration()
+        if orange { config = config.applying(.init(paletteColors: [.systemOrange])) }
+        return NSImage(systemSymbolName: name, accessibilityDescription: nil)?.withSymbolConfiguration(config)
     }
 
     private func isFolder(_ path: String) -> Bool {

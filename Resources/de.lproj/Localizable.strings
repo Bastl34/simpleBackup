@@ -69,3 +69,18 @@
 "Replace" = "Ersetzen";
 "Without a saved password, you'll be asked when the backup starts." = "Ohne gespeichertes Passwort wird beim Start gefragt.";
 "You'll be asked for the password on every backup." = "Das Passwort wird bei jedem Backup abgefragt.";
+
+/* Reminder */
+"Reminder" = "Erinnerung";
+"Off" = "Aus";
+"After 1 day" = "Nach 1 Tag";
+"After 3 days" = "Nach 3 Tagen";
+"After 1 week" = "Nach 1 Woche";
+"After 2 weeks" = "Nach 2 Wochen";
+"After 1 month" = "Nach 1 Monat";
+"Last backup" = "Letztes Backup";
+"Never" = "Noch nie";
+"When a backup is due, the menu bar icon turns orange." = "Ist ein Backup fällig, wird das Symbol in der Menüleiste orange.";
+"Last backup: %@" = "Letztes Backup: %@";
+"No backup yet" = "Noch kein Backup";
+"Backup due: %@" = "Backup fällig: %@";
